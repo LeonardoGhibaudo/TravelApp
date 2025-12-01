@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  
+}
+
+
+
+model User {
+  id String @id @default(uuid())
+  email String @unique
+  passwordHash String
+  name String
+  createdAt DateTime @default(now())
+  bookings Booking[]
+  tripsOwned Trip[] @relation("OwnerRelation")
+  tripParticipants TripParticipant[]
+  watchedFlights WatchedFlight[]
+  notifications Notification[]
+  refreshTokens RefreshToken[]
+}
+
+model Flight{
+  id String @id @default(uuid())
+  flightNumber String
+  departureAirport String
+  arrivalAirport String
+  departureTime DateTime
+  arrivalTime DateTime
+  airline String
+  price Decimal @db.Decimal(10, 2)
+  bookings Booking[]
+}
+
+model Booking{
+  id String @id @default(uuid())
+  userId String
+  flightId String
+  passengerName String
+  status String @default("Booked")
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id])
+  flight Flight @relation(fields: [flightId], references: [id])
+}
+
+model Trip{
+  id String @id @default(uuid())
+  name String
+  destination String
+  startDate DateTime
+  endDate DateTime
+  ownerId String
+  owner User @relation("OwnerRelation", fields: [ownerId], references: [id])
+  tripStops TripStop[]
+  tripParticipants TripParticipant[]
+}
+
+model TripStop{
+  id String @id @default(uuid())
+  tripId String
+  title String
+  location String
+  plannedTime DateTime
+  orderIndex Int
+  trip Trip @relation(fields: [tripId], references: [id])
+}
+
+model TripParticipant{
+  id String @id @default(uuid())
+  tripId String
+  userId String
+  role String @default("VIEWER")
+  user User @relation(fields: [userId], references: [id])
+  trip Trip @relation(fields: [tripId], references: [id])
+}
+
+model WatchedFlight{
+  id String @id @default(uuid())
+  userId String
+  flightNumber String
+  date DateTime
+  lastStatus String?
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Notification{
+  id String @id @default(uuid())
+  userId String
+  type String
+  message String
+  isRead Boolean @default(false)
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id])
+}
+
+model RefreshToken{
+  id String @id @default(uuid())
+  userId String
+  token String
+  expiresAt DateTime
+  user User @relation(fields: [userId], references: [id])
+}
