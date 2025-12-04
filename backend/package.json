@@ -5,28 +5,34 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "dev": "ts-node src/server.ts",
+    "build": "tsc && cpx \"prisma/**/*\" dist/prisma",
+    "dev": "npm run build && node dist/server.js",
     "lint": "eslint .",
     "format": "prettier --write ."
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "dependencies": {
-    "@prisma/client": "^7.0.1",
+    "@prisma/client": "^5.14.0",
+    "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
-    "prisma": "^7.0.1"
+    "jsonwebtoken": "^9.0.2",
+    "prisma": "^5.14.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@eslint/json": "^0.14.0",
+    "@types/bcrypt": "^6.0.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.5",
     "@types/jest": "^30.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.10.1",
+    "cpx": "^1.5.0",
     "eslint": "^9.39.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
