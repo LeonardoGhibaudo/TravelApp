@@ -5,7 +5,7 @@ import prisma from "../lib/prisma.js";
 const ACCESS_EXPIRE = "15m";
 const REFRESH_EXPIRE_DAYS = 30;
 
-const JWT_SECRET = process.env.JWT_SECRET || "DEV_SECRET_CHANGE_ME";
+const JWT_SECRET = process.env.JWT_SECRET || "7290d577e699ed4f1da03d18a763b1257e3c9af03aa3f5fea57af4ff4b2f262a";
 
 export function createAccessToken(user: { id: string; email: string }) {
   return jwt.sign(
