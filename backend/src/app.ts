@@ -1,6 +1,7 @@
 import express from "express"
 import authRoutes from "./routes/auth.routes.js"
 import userRoutes from "./routes/user.routes.js";
+import tripRoutes from "./routes/trip.routes.js"
 import cors from "cors"
 
 
@@ -16,5 +17,6 @@ app.get("/", (req, res) => {
 });
 
 app.use("/user", userRoutes);
+app.use("/trips", tripRoutes)
 
 export default app

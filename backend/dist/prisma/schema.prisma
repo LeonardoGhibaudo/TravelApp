@@ -76,6 +76,7 @@ model TripParticipant{
   role String @default("VIEWER")
   user User @relation(fields: [userId], references: [id])
   trip Trip @relation(fields: [tripId], references: [id])
+  @@unique([tripId, userId])
 }
 
 model WatchedFlight{
