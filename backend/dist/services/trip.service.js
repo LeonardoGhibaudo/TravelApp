@@ -82,3 +82,49 @@ export async function getTripsDetails(userId, tripId) {
         participants,
     };
 }
+export async function createStops(userId, tripId, data) {
+    const { title, location, plannedTime } = data;
+    if (!title || !plannedTime) {
+        throw new Error("Missing required fields");
+    }
+    const { role } = await checkTripAccess(userId, tripId);
+    if (role === "VIEWER") {
+        throw new Error("FORBIDDEN");
+    }
+    const lastStop = await prisma.tripStop.findFirst({
+        where: { tripId },
+        orderBy: { orderIndex: "desc" }
+    });
+    const nextOrderIndex = lastStop ? lastStop.orderIndex + 1 : 0;
+    return prisma.tripStop.create({
+        data: {
+            tripId,
+            title,
+            location,
+            plannedTime: new Date(plannedTime),
+            orderIndex: nextOrderIndex
+        }
+    });
+}
+export async function updateStops(userId, tripId, stopId, data) {
+    const { title, location, plannedTime } = data;
+    const { role } = await checkTripAccess(userId, tripId);
+    if (role === "VIEWER") {
+        throw new Error("FORBIDDEN");
+    }
+    ;
+    const stop = await prisma.tripStop.findUnique({
+        where: { id: stopId }
+    });
+    if (!stop || stop.tripId !== tripId) {
+        throw new Error("STOP_NOT_FOUND");
+    }
+    return prisma.tripStop.update({
+        where: { id: stopId },
+        data: {
+            title: data.title ?? stop.title,
+            location: data.location ?? stop.location,
+            plannedTime: data.plannedTime ? new Date(data.plannedTime) : stop.plannedTime
+        }
+    });
+}
