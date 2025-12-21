@@ -1,5 +1,5 @@
 import Router from "express";
-import { createTrip, getMyTrips, getTripsById, createTripStops, updateTripStops } from "../controllers/trip.controller.js"
+import { createTrip, getMyTrips, getTripsById, createTripStops, updateTripStops, deleteStopById, deleteTripById, updateTripById } from "../controllers/trip.controller.js"
 import { authMiddleware } from "../middleware/auth.middleware.js"
 
 
@@ -9,8 +9,11 @@ const router = Router();
 router.post("/", authMiddleware , createTrip)
 router.get("/", authMiddleware, getMyTrips)
 router.get("/:tripId", authMiddleware, getTripsById)
-router.get("/:tripId/stops", authMiddleware, createTripStops)
+router.post("/:tripId/stops", authMiddleware, createTripStops)
 router.patch("/:tripId/stops/:stopsId", authMiddleware, updateTripStops)
+router.patch("/:tripId", authMiddleware, updateTripById)
+router.delete("/:tripId/stops/:stopsId", authMiddleware, deleteStopById)
+router.delete("/:tripId", authMiddleware, deleteTripById)
 
 
 export default router;

@@ -12,6 +12,4 @@ app.get("/", (req, res) => {
 });
 app.use("/user", userRoutes);
 app.use("/trips", tripRoutes);
-
-
 export default app;

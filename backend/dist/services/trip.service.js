@@ -128,3 +128,68 @@ export async function updateStops(userId, tripId, stopId, data) {
         }
     });
 }
+export async function deleteStop(userId, tripId, stopId) {
+    const { role } = await checkTripAccess(userId, tripId);
+    if (role === "VIEWER") {
+        throw new Error("FORBIDDEN");
+    }
+    const stop = await prisma.tripStop.findUnique({
+        where: {
+            id: stopId
+        }
+    });
+    if (!stop || stop.tripId !== tripId) {
+        throw new Error("STOP_NOT_FOUND");
+    }
+    await prisma.tripStop.delete({
+        where: { id: stopId }
+    });
+}
+export async function deleteTrip(userId, tripId) {
+    const { role } = await checkTripAccess(userId, tripId);
+    if (role === "VIEWER") {
+        throw new Error("FORBIDDEN");
+    }
+    const trip = await prisma.trip.findUnique({
+        where: {
+            id: tripId
+        }
+    });
+    if (!trip || trip.id !== tripId) {
+        throw new Error("STOP_NOT_FOUND");
+    }
+    await prisma.tripStop.deleteMany({
+        where: { tripId }
+    });
+    await prisma.tripParticipant.deleteMany({
+        where: { tripId }
+    });
+    await prisma.trip.delete({
+        where: { id: tripId }
+    });
+}
+export async function updateTrip(userId, tripId, data) {
+    const { role } = await checkTripAccess(userId, tripId);
+    if (role === "VIEWER") {
+        throw new Error("FORBIDDEN");
+    }
+    const trip = await prisma.trip.findUnique({
+        where: { id: tripId }
+    });
+    if (!trip) {
+        throw new Error("TRIP_NOT_FOUND");
+    }
+    return prisma.trip.update({
+        where: { id: tripId },
+        data: {
+            name: data.name ?? trip.name,
+            destination: data.destination ?? trip.destination,
+            startDate: data.startDate
+                ? new Date(data.startDate)
+                : trip.startDate,
+            endDate: data.endDate
+                ? new Date(data.endDate)
+                : trip.endDate
+        }
+    });
+}
