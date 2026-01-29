@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import prisma from "../lib/prisma.js";
 import { checkTripAccess } from "./tripAccess.service.js";
 export async function tripCreate(userId, data) {
@@ -158,15 +159,16 @@ export async function deleteTrip(userId, tripId) {
     if (!trip || trip.id !== tripId) {
         throw new Error("STOP_NOT_FOUND");
     }
-    await prisma.tripStop.deleteMany({
-        where: { tripId }
-    });
-    await prisma.tripParticipant.deleteMany({
-        where: { tripId }
-    });
-    await prisma.trip.delete({
-        where: { id: tripId }
-    });
+    await prisma.$transaction([prisma.tripStop.deleteMany({
+            where: { tripId }
+        }),
+        prisma.tripParticipant.deleteMany({
+            where: { tripId }
+        }),
+        prisma.trip.delete({
+            where: { id: tripId }
+        })
+    ]);
 }
 export async function updateTrip(userId, tripId, data) {
     const { role } = await checkTripAccess(userId, tripId);
@@ -191,5 +193,110 @@ export async function updateTrip(userId, tripId, data) {
                 ? new Date(data.endDate)
                 : trip.endDate
         }
+    });
+}
+export async function createTripInvite(userId, tripId, email, role = "VIEWER") {
+    await checkTripAccess(userId, tripId);
+    const alreadyParticipant = await prisma.tripParticipant.findFirst({
+        where: {
+            tripId,
+            user: {
+                is: { email }
+            }
+        }
+    });
+    if (alreadyParticipant) {
+        throw new Error("ALREADY_PARTICIPANT");
+    }
+    await prisma.tripInvite.deleteMany({
+        where: { tripId, email }
+    });
+    return await prisma.tripInvite.create({
+        data: {
+            tripId,
+            email,
+            role,
+            token: randomUUID(),
+            expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7)
+        }
+    });
+}
+export async function acceptTripInvite(userId, userEmail, token) {
+    const invite = await prisma.tripInvite.findUnique({
+        where: { token }
+    });
+    if (!invite) {
+        throw new Error("INVITE_NOT_FOUND");
+    }
+    if (invite.expiresAt < new Date()) {
+        throw new Error("EXPIRED");
+    }
+    if (invite.email !== userEmail) {
+        throw new Error("INVITE_EMAIL_MISMATCH");
+    }
+    const [participant] = await prisma.$transaction([
+        prisma.tripParticipant.create({
+            data: {
+                tripId: invite.tripId,
+                userId,
+                role: invite.role
+            }
+        }),
+        prisma.tripInvite.delete({
+            where: { token }
+        })
+    ]);
+    return participant;
+}
+export async function removeTripParticipant(requesterId, tripId, participantId) {
+    const trip = await prisma.trip.findUnique({
+        where: { id: tripId },
+    });
+    if (!trip) {
+        throw new Error("TRIP_NOT_FOUND");
+    }
+    if (trip.ownerId !== requesterId) {
+        throw new Error("FORBIDDEN");
+    }
+    const participant = await prisma.tripParticipant.findUnique({
+        where: { id: participantId }
+    });
+    if (!participant || participant.tripId !== tripId) {
+        throw new Error("PARTICIPANT_NOT_FOUND");
+    }
+    if (participant.userId === requesterId) {
+        throw new Error("CANNOT_REMOVE_OWNER");
+    }
+    await prisma.tripParticipant.delete({
+        where: { id: participantId }
+    });
+    return { success: true };
+}
+export async function changeParticipantRole(userId, tripId, participantId, role) {
+    if (!["VIEWER", "EDITOR"].includes(role)) {
+        throw new Error("INVALID_ROLE");
+    }
+    const trip = await prisma.trip.findUnique({
+        where: { id: tripId },
+        select: { ownerId: true }
+    });
+    if (!trip) {
+        throw new Error("TRIP_NOT_FOUND");
+    }
+    if (trip.ownerId !== userId) {
+        throw new Error("FORBIDDEN");
+    }
+    const participant = await prisma.tripParticipant.findUnique({
+        where: { id: participantId }
+    });
+    if (!participant || participant.tripId !== tripId) {
+        throw new Error("PARTICIPANT_NOT_FOUND");
+    }
+    if (participant.id === userId) {
+        throw new Error("CANNOT_CHANGE_OWNER");
+    }
+    return prisma.tripParticipant.update({
+        where: { id: participantId },
+        data: { role }
     });
 }

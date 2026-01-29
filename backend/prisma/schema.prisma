@@ -57,12 +57,13 @@ model Trip{
   owner User @relation("OwnerRelation", fields: [ownerId], references: [id])
   tripStops TripStop[]
   tripParticipants TripParticipant[]
+  tripInvite TripInvite[]
 }
 
 model TripStop{
   id String @id @default(uuid())
   tripId String
-  title String
+    title String
   location String
   plannedTime DateTime
   orderIndex Int
@@ -78,6 +79,20 @@ model TripParticipant{
   trip Trip @relation(fields: [tripId], references: [id])
   @@unique([tripId, userId])
 }
+
+model TripInvite{
+  id String @id @default(uuid())
+  tripId    String
+  email     String
+  role      String @default("VIEWER")
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+}
+
+
 
 model WatchedFlight{
   id String @id @default(uuid())

@@ -17,6 +17,11 @@ export async function login(req, res) {
         return res.status(200).json(result);
     }
     catch (err) {
+        if (err.message === "USER_NON_EXISTENT") {
+            return res.status(401).json({
+                "error": "Utente gia registrato"
+            });
+        }
         return res.status(400).json({ error: err.message });
     }
 }

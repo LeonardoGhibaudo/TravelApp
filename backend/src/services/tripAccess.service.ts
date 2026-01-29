@@ -5,11 +5,11 @@ export async function checkTripAccess(userId: string, tripId: string) {
         where: { id: tripId }
     })
 
-    if (!trip){
+    if (!trip) {
         throw new Error("TRIP_NOT_FOUND");
     }
 
-    if(trip.ownerId === userId){
+    if (trip.ownerId === userId) {
         return {
             role: "OWNER",
             trip,
@@ -26,7 +26,7 @@ export async function checkTripAccess(userId: string, tripId: string) {
         }
     })
 
-    if(!participant){
+    if (!participant) {
         throw new Error("FORBIDDEN");
     }
 

@@ -47,7 +47,7 @@ export async function authLogin(data) {
         where: { email },
     });
     if (!user) {
-        throw new Error("Utente non registrato");
+        throw new Error("USER_NON_EXISTENT");
     }
     const comparePassword = await bcrypt.compare(password, user.passwordHash);
     if (!comparePassword) {
