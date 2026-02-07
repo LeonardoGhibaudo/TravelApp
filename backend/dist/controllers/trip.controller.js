@@ -95,7 +95,9 @@ export async function deleteStopById(req, res) {
         const userId = req.user.id;
         const { tripId, stopsId } = req.params;
         await deleteStop(userId, tripId, stopsId);
-        return res.status(204).send();
+        return res.status(204).json({
+            "message": "Viaggio eliminato"
+        });
     }
     catch (err) {
         if (err.message === "STOP_NOT_FOUND") {
