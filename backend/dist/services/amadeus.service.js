@@ -1,6 +1,6 @@
 import axios from "axios";
-const AMADEUS_CLIENT_ID = process.env.AMADEUS_CLIENT_ID;
-const AMADEUS_CLIENT_SECRET = process.env.AMADEUS_CLIENT_SECRET;
+const AMADEUS_CLIENT_ID = process.env.AMADEUS_API_KEY;
+const AMADEUS_CLIENT_SECRET = process.env.AMADEUS_API_SECRET;
 const AMADEUS_BASE_URL = "https://test.api.amadeus.com";
 let accessToken = null;
 let tokenExpiresAt = 0;
@@ -9,7 +9,7 @@ async function getAccessToken() {
     if (accessToken && now < tokenExpiresAt) {
         return accessToken;
     }
-    const response = await axios.post('$AMADEUS_BASE_URL/v1/security/oauth2/token', new URLSearchParams({
+    const response = await axios.post(`${AMADEUS_BASE_URL}/v1/security/oauth2/token`, new URLSearchParams({
         grant_type: "client_credentials",
         client_id: AMADEUS_CLIENT_ID,
         client_secret: AMADEUS_CLIENT_SECRET
@@ -24,7 +24,9 @@ async function getAccessToken() {
     return accessToken;
 }
 export async function searchFlights(params) {
-    const token = getAccessToken();
+    console.log("getting access token...");
+    const token = await getAccessToken();
+    console.log("token acquired");
     const query = {
         originLocationCode: params.originLocationCode,
         destinationLocationCode: params.destinationLocationCode,
@@ -35,7 +37,8 @@ export async function searchFlights(params) {
     };
     if (params.returnDate)
         query.returnDate = params.returnDate;
-    const response = await axios.get(`${AMADEUS_BASE_URL}/v2/shopping/flight-offers`, {
+    console.log("BEFORE CALL");
+    const response = await axios.get(AMADEUS_BASE_URL + `/v2/shopping/flight-offers`, {
         headers: {
             Authorization: `Bearer ${token}`,
         },
@@ -47,11 +50,13 @@ export async function searchFlights(params) {
             adults: params.adults ?? 1,
             max: 10,
         },
+        timeout: 5000
     });
+    console.log("AFTER CALL");
     return response.data.data.map((offer) => {
         const itinerary = offer.itineraries[0];
-        const firstSegment = offer.segments[0];
-        const lastSegment = offer.itinerary.segments[itinerary.segments.length - 1];
+        const firstSegment = itinerary.segments[0];
+        const lastSegment = itinerary.segments[itinerary.segments.length - 1];
         return {
             flightNumber: `${firstSegment.carrierCode}${firstSegment.number}`,
             airline: firstSegment.carrierCode,
@@ -63,5 +68,22 @@ export async function searchFlights(params) {
             currency: offer.price.currency,
             duration: itinerary.duration,
         };
+    });
+}
+export async function flightSnapshot(data) {
+    return this.prisma.flight.create({
+        data: {
+            offerId: data.offerId,
+            flightNumber: data.flightNumber,
+            airline: data.airline,
+            departureAirport: data.departureAirport,
+            arrivalAirport: data.arrivalAirport,
+            departureTime: data.departureTime,
+            arrivalTime: data.arrivalTime,
+            price: data.price,
+            currency: data.currency,
+            duration: data.duration,
+            tripId: data.tripId,
+        },
     });
 }

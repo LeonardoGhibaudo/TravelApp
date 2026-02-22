@@ -86,6 +86,10 @@ export async function getTripsDetails(userId: string, tripId: string) {
         }
     })
 
+    const flight = await prisma.flight.findMany({
+        where: { tripId }
+    })
+
     return {
         id: trip.id,
         name: trip.name,
@@ -95,6 +99,7 @@ export async function getTripsDetails(userId: string, tripId: string) {
         role,
         tripStops,
         participants,
+        flight
     }
 }
 

@@ -3,8 +3,8 @@ import { z } from "zod";
 const baseTripSchema = z.object({
     name: z.string().min(1, "Il nome non puó essere vuoto"),
     destination: z.string().min(1, "La destinazione non puó essere vuota"),
-    startDate: z.string().datetime("Data di inizio non valida"),
-    endDate: z.string().datetime("Data di fine non valida")
+    startDate: z.string().date("Data di inizio non valida"),
+    endDate: z.string().date("Data di fine non valida")
 })
 
 export const createTripSchema = baseTripSchema.refine(

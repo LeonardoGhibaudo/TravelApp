@@ -24,16 +24,30 @@ model User {
   refreshTokens RefreshToken[]
 }
 
-model Flight{
-  id String @id @default(uuid())
-  flightNumber String
-  departureAirport String
-  arrivalAirport String
-  departureTime DateTime
-  arrivalTime DateTime
-  airline String
-  price Decimal @db.Decimal(10, 2)
-  bookings Booking[]
+enum FlightStatus {
+  SAVED
+  SELECTED
+  REMOVED
+}
+
+model Flight {
+  id                String       @id @default(uuid())
+  offerId           String?
+  flightNumber      String
+  airline           String
+  departureAirport  String
+  arrivalAirport    String
+  departureTime     DateTime
+  arrivalTime       DateTime
+  price             Decimal      @db.Decimal(10, 2)
+  currency          String
+  status            FlightStatus @default(SAVED)
+  createdAt         DateTime     @default(now())
+
+  tripId            String
+  trip              Trip         @relation(fields: [tripId], references: [id])
+
+  bookings          Booking[]
 }
 
 model Booking{
@@ -58,6 +72,7 @@ model Trip{
   tripStops TripStop[]
   tripParticipants TripParticipant[]
   tripInvite TripInvite[]
+  flights Flight[]
 }
 
 model TripStop{
