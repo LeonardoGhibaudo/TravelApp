@@ -78,7 +78,8 @@ model Trip{
 model TripStop{
   id String @id @default(uuid())
   tripId String
-    title String
+  title String
+  description String?
   location String
   plannedTime DateTime
   orderIndex Int

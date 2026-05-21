@@ -50,6 +50,12 @@ export async function snapshotFlight(req: Request, res: Response) {
       });
     }
 
+    const { checkTripAccess } = await import("../services/tripAccess.service.js");
+    const { role } = await checkTripAccess(req.user.id, tripId);
+    if (role === "VIEWER") {
+      return res.status(403).json({ error: "Accesso negato" });
+    }
+
     const flight = await prisma.flight.create({
       data: {
         tripId,
@@ -86,5 +92,19 @@ export async function getFlightsByTrip(req: Request, res: Response) {
             return res.status(403).json({ error: "Accesso negato" })
         }
         return res.status(500).json({ error: err.message })
+  }
+}
+
+export async function searchLocations(req: Request, res: Response) {
+  try {
+    const { keyword } = req.query;
+    if (!keyword || typeof keyword !== 'string') {
+      return res.status(400).json({ error: "keyword is required" });
+    }
+    const locations = await amadeusService.getLocations(keyword);
+    return res.json(locations);
+  } catch (err: any) {
+    console.error("Location search error: ", err);
+    return res.status(500).json({ error: err.message || "Failed to search locations" });
   }
 }

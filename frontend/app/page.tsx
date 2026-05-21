@@ -1,134 +1,190 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { PlaneTakeoff, Calendar, MapPin, ArrowRight } from "lucide-react";
+import { PlaneTakeoff, MapPin, ArrowRight, Search } from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
-  const [origin, setOrigin] = useState("");
-  const [destination, setDestination] = useState("");
+  
+  const [originQuery, setOriginQuery] = useState("");
+  const [destQuery, setDestQuery] = useState("");
+  const [originIata, setOriginIata] = useState("");
+  const [destIata, setDestIata] = useState("");
   const [date, setDate] = useState("");
   const [isSearching, setIsSearching] = useState(false);
 
+  const [originSuggestions, setOriginSuggestions] = useState<any[]>([]);
+  const [destSuggestions, setDestSuggestions] = useState<any[]>([]);
+
+  const fetchLocations = async (query: string) => {
+    if (query.length < 2) return [];
+    try {
+      const res = await fetch(`http://localhost:3001/flights/locations?keyword=${encodeURIComponent(query)}`);
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {}
+    return [];
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (originQuery && originQuery !== originIata) {
+        const results = await fetchLocations(originQuery);
+        setOriginSuggestions(results);
+      } else {
+        setOriginSuggestions([]);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [originQuery, originIata]);
+
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (destQuery && destQuery !== destIata) {
+        const results = await fetchLocations(destQuery);
+        setDestSuggestions(results);
+      } else {
+        setDestSuggestions([]);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [destQuery, destIata]);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!origin || !destination) return;
+    if (!originIata || !destIata || !date) return;
     setIsSearching(true);
-    // Simulate slight delay for luxury feel, then route
-    setTimeout(() => {
-      router.push(`/flights?origin=${encodeURIComponent(origin)}&dest=${encodeURIComponent(destination)}&date=${date}`);
-    }, 800);
+    router.push(`/flights?origin=${encodeURIComponent(originIata)}&dest=${encodeURIComponent(destIata)}&date=${date}`);
   };
 
   return (
-    <main className="min-h-screen pt-40 pb-16 px-6 max-w-[1400px] mx-auto flex flex-col gap-24 relative">
-      
-      {/* Decorative large text behind */}
-      <div className="absolute top-40 left-0 text-[15vw] font-serif font-black opacity-5 select-none pointer-events-none leading-none -z-10">
-        JOURNEY
-      </div>
-
-      {/* Hero Section */}
-      <section className="flex flex-col md:flex-row gap-16 justify-between items-center relative z-10 mt-10">
-        <div className="flex-1 flex flex-col gap-8">
-          <div className="uppercase tracking-[0.3em] text-cyan-400 text-xs font-bold flex items-center gap-4">
-            <span className="w-12 h-[1px] bg-[#FFB000]"></span> Elevate Your Travel
+    <main className="flex-1 flex flex-col items-center w-full px-6 py-20 max-w-7xl mx-auto">
+      <section className="w-full flex flex-col md:flex-row gap-16 justify-between items-center mt-10">
+        <div className="flex-1 flex flex-col gap-6">
+          <div className="uppercase tracking-[0.2em] text-[#8A9A86] text-xs font-bold flex items-center gap-4">
+            <span className="w-8 h-[1px] bg-[#8A9A86]"></span> Curated Escapes
           </div>
-          <h1 className="text-6xl md:text-8xl font-serif font-black leading-[1.1] tracking-tight">
-            Curated <br />
-            <span className="italic text-white/70">Experiences</span>
+          <h1 className="text-6xl md:text-8xl font-serif leading-[1.05] tracking-tight text-[#1A1A1A]">
+            The Art of <br />
+            <span className="italic text-[#C28F79]">Travel.</span>
           </h1>
-          <p className="text-lg text-white/50 max-w-md font-light leading-relaxed">
-            Discover flights, manage elegant itineraries, and track price drops in a truly refined digital environment.
+          <p className="text-lg text-[#666666] max-w-md font-light leading-relaxed mt-4">
+            A refined approach to journey mapping. Discover flights, manage elegant itineraries, and coordinate with companions.
           </p>
         </div>
 
-        {/* Search Widget */}
         <div className="flex-1 w-full max-w-lg">
-          <form onSubmit={handleSearch} className="aero-glass p-8 flex flex-col gap-6 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#FFB000] to-transparent opacity-50"></div>
+          <form onSubmit={handleSearch} className="editorial-card p-10 flex flex-col gap-6 relative">
+            <h3 className="font-serif text-3xl mb-4">Where to next?</h3>
             
-            <h3 className="font-serif text-2xl mb-2">Where to next?</h3>
-            
-            <div className="flex flex-col gap-1">
-              <label className="uppercase tracking-widest text-[10px] text-white/50 font-bold ml-1">Origin (IATA Code)</label>
+            <div className="flex flex-col gap-2 relative">
+              <label className="uppercase tracking-widest text-[10px] text-[#666666] font-semibold">Origin</label>
               <div className="relative">
-                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A0AEC0]" />
                 <input 
                   type="text" 
-                  placeholder="e.g. MXP" 
-                  className="aero-input w-full pl-12 uppercase"
-                  maxLength={3}
-                  value={origin}
-                  onChange={(e) => setOrigin(e.target.value.toUpperCase())}
+                  placeholder="e.g. Milano" 
+                  className="input-editorial w-full pl-12"
+                  value={originQuery}
+                  onChange={(e) => {
+                    setOriginQuery(e.target.value);
+                    if(originIata) setOriginIata("");
+                  }}
                   required
                 />
+                {originSuggestions.length > 0 && !originIata && (
+                  <ul className="absolute top-full left-0 w-full bg-white border border-[#E5E5E5] mt-1 z-50 max-h-60 overflow-y-auto shadow-xl">
+                    {originSuggestions.map((loc) => (
+                      <li 
+                        key={loc.iataCode} 
+                        className="p-3 hover:bg-[#FAF9F6] cursor-pointer border-b border-[#F0F0F0] last:border-0"
+                        onClick={() => {
+                          setOriginQuery(`${loc.cityName || loc.name} (${loc.iataCode})`);
+                          setOriginIata(loc.iataCode);
+                          setOriginSuggestions([]);
+                        }}
+                      >
+                        <div className="font-medium">{loc.cityName || loc.name}</div>
+                        <div className="text-xs text-[#666666]">{loc.name} • {loc.iataCode}</div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             </div>
 
-            <div className="flex flex-col gap-1">
-              <label className="uppercase tracking-widest text-[10px] text-white/50 font-bold ml-1">Destination (IATA Code)</label>
+            <div className="flex flex-col gap-2 relative">
+              <label className="uppercase tracking-widest text-[10px] text-[#666666] font-semibold">Destination</label>
               <div className="relative">
-                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A0AEC0]" />
                 <input 
                   type="text" 
-                  placeholder="e.g. JFK" 
-                  className="aero-input w-full pl-12 uppercase"
-                  maxLength={3}
-                  value={destination}
-                  onChange={(e) => setDestination(e.target.value.toUpperCase())}
+                  placeholder="e.g. New York" 
+                  className="input-editorial w-full pl-12"
+                  value={destQuery}
+                  onChange={(e) => {
+                    setDestQuery(e.target.value);
+                    if(destIata) setDestIata("");
+                  }}
                   required
                 />
+                {destSuggestions.length > 0 && !destIata && (
+                  <ul className="absolute top-full left-0 w-full bg-white border border-[#E5E5E5] mt-1 z-50 max-h-60 overflow-y-auto shadow-xl">
+                    {destSuggestions.map((loc) => (
+                      <li 
+                        key={loc.iataCode} 
+                        className="p-3 hover:bg-[#FAF9F6] cursor-pointer border-b border-[#F0F0F0] last:border-0"
+                        onClick={() => {
+                          setDestQuery(`${loc.cityName || loc.name} (${loc.iataCode})`);
+                          setDestIata(loc.iataCode);
+                          setDestSuggestions([]);
+                        }}
+                      >
+                        <div className="font-medium">{loc.cityName || loc.name}</div>
+                        <div className="text-xs text-[#666666]">{loc.name} • {loc.iataCode}</div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             </div>
 
-            <div className="flex flex-col gap-1">
-              <label className="uppercase tracking-widest text-[10px] text-white/50 font-bold ml-1">Departure Date</label>
-              <div className="relative">
-                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                <input 
-                  type="date" 
-                  className="aero-input w-full pl-12"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                />
-              </div>
+            <div className="flex flex-col gap-2">
+              <label className="uppercase tracking-widest text-[10px] text-[#666666] font-semibold">Departure Date</label>
+              <input 
+                type="date" 
+                className="input-editorial w-full"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                required
+              />
             </div>
 
-            <button type="submit" className="aero-button-cyan mt-4 flex items-center justify-center gap-3 group">
-              {isSearching ? (
-                <svg className="animate-spin h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-              ) : (
-                <>
-                  Find Flights <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </>
-              )}
+            <button type="submit" className="btn-primary mt-4 w-full" disabled={!originIata || !destIata || !date || isSearching}>
+              {isSearching ? "Searching..." : "Find Flights"}
             </button>
           </form>
         </div>
       </section>
 
-      {/* Quick Links / Features */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
-        <div className="aero-glass flex flex-col gap-6 cursor-pointer group">
-          <PlaneTakeoff className="w-8 h-8 text-white/40 group-hover:text-cyan-400 transition-colors" />
-          <h3 className="font-serif text-2xl">Flight Tracking</h3>
-          <p className="text-sm text-white/40 leading-relaxed font-light">Monitor prices over time. Receive alerts when your dream destination becomes affordable.</p>
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-32 w-full">
+        <div className="flex flex-col gap-4 border-t border-[#E5E5E5] pt-8">
+          <PlaneTakeoff className="w-6 h-6 text-[#1A1A1A]" strokeWidth={1.5} />
+          <h3 className="font-serif text-2xl">Flight Intelligence</h3>
+          <p className="text-sm text-[#666666] leading-relaxed">Uncover optimal routing and monitor pricing trends in a distraction-free environment.</p>
         </div>
-        <div className="aero-glass flex flex-col gap-6 cursor-pointer group">
-          <MapPin className="w-8 h-8 text-white/40 group-hover:text-cyan-400 transition-colors" />
-          <h3 className="font-serif text-2xl">Smart Itineraries</h3>
-          <p className="text-sm text-white/40 leading-relaxed font-light">Organize stops, book hotels, and map your entire journey in one elegant interface.</p>
+        <div className="flex flex-col gap-4 border-t border-[#E5E5E5] pt-8">
+          <MapPin className="w-6 h-6 text-[#1A1A1A]" strokeWidth={1.5} />
+          <h3 className="font-serif text-2xl">Refined Itineraries</h3>
+          <p className="text-sm text-[#666666] leading-relaxed">Map your journey stop by stop. Add rich descriptions and manage timelines seamlessly.</p>
         </div>
-        <div className="aero-glass flex flex-col gap-6 cursor-pointer group border border-white/5 bg-white/5">
-          <div className="mt-auto">
-            <h3 className="font-serif text-2xl mb-4">Ready to go?</h3>
-            <button onClick={() => router.push('/auth/register')} className="aero-button-ghost w-full">Create Account</button>
-          </div>
+        <div className="flex flex-col gap-4 border-t border-[#E5E5E5] pt-8 bg-[#F5F4F0] p-8 -mt-8">
+          <h3 className="font-serif text-2xl mb-2">Begin your journey.</h3>
+          <button onClick={() => router.push('/auth/register')} className="btn-secondary">Join Aero</button>
         </div>
       </section>
-
     </main>
   );
 }

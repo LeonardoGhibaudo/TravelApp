@@ -137,6 +137,29 @@ export async function searchFlights(params: {
     })
 
     return flights
-
-  
  }
+
+export async function getLocations(keyword: string) {
+  const token = await getAccessToken();
+
+  const response = await axios.get(
+    `${AMADEUS_BASE_URL}/v1/reference-data/locations`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+      params: {
+        subType: "CITY,AIRPORT",
+        keyword,
+        "page[limit]": 10
+      },
+      timeout: 5000,
+    }
+  );
+
+  return response.data.data.map((loc: any) => ({
+    iataCode: loc.iataCode,
+    name: loc.name,
+    subType: loc.subType,
+    countryCode: loc.address?.countryCode,
+    cityName: loc.address?.cityName
+  }));
+}

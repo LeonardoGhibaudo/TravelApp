@@ -105,7 +105,7 @@ export async function getTripsDetails(userId: string, tripId: string) {
 
 
 export async function createStops(userId: string, tripId: string, data: any) {
-    const { title, location, plannedTime } = data
+    const { title, description, location, plannedTime } = data
 
     if (!title || !plannedTime) {
         throw new Error("Missing required fields");
@@ -130,6 +130,7 @@ export async function createStops(userId: string, tripId: string, data: any) {
         data: {
             tripId,
             title,
+            description,
             location,
             plannedTime: new Date(plannedTime),
             orderIndex: nextOrderIndex
