@@ -1,26 +1,188 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Syne:wght@400;600;700;800&display=swap');
+
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  body {
+    background-color: #05050A;
+    color: white;
+    overflow-x: hidden;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Syne', sans-serif;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer utilities {
+  .bg-orb-cyan {
+    position: absolute;
+    border-radius: 9999px;
+    background-color: rgb(6 182 212 / 0.2);
+    filter: blur(120px);
+    pointer-events: none;
+  }
+  .bg-orb-purple {
+    position: absolute;
+    border-radius: 9999px;
+    background-color: rgb(147 51 234 / 0.2);
+    filter: blur(120px);
+    pointer-events: none;
+  }
+
+  .aero-glass {
+    background-color: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(40px);
+    border-radius: 1.5rem;
+    box-shadow: 0 8px 32px 0 rgba(0,0,0,0.37);
+    transition: all 0.5s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .aero-glass::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom right, rgba(255,255,255,0.05), transparent);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+  }
+  .aero-glass:hover::before {
+    opacity: 1;
+  }
+  .aero-glass:hover {
+    border-color: rgba(255,255,255,0.15);
+    box-shadow: 0 12px 40px 0 rgba(6,182,212,0.1);
+    transform: translateY(-4px);
+  }
+
+  .bento-card-large {
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+  }
+  @media (min-width: 768px) {
+    .bento-card-large {
+      grid-column: span 2 / span 2;
+      grid-row: span 2 / span 2;
+    }
+    .bento-card-medium {
+      grid-column: span 2 / span 2;
+    }
+  }
+  .bento-card-medium {
+    padding: 1.5rem;
+  }
+  .bento-card-small {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .aero-button {
+    position: relative;
+    overflow: hidden;
+    background-color: white;
+    color: black;
+    font-weight: 600;
+    border-radius: 1rem;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.3s ease;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+  .aero-button:active, .aero-button-cyan:active, .aero-button-ghost:active {
+    transform: scale(0.95);
+  }
+  .aero-button:hover {
+    box-shadow: 0 0 20px rgba(255,255,255,0.4);
+  }
+  
+  .aero-button-cyan {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(to right, #06b6d4, #2563eb);
+    color: white;
+    font-weight: 600;
+    border-radius: 1rem;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .aero-button-cyan:hover {
+    box-shadow: 0 6px 25px rgba(6, 182, 212, 0.6);
+    filter: brightness(1.1);
+  }
+
+  .aero-button-ghost {
+    border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.8);
+    border-radius: 1rem;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .aero-button-ghost:hover {
+    background-color: rgba(255,255,255,0.05);
+    color: white;
+  }
+
+  .aero-input {
+    background-color: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 1rem;
+    padding: 1rem 1.25rem;
+    color: white;
+    transition: all 0.3s ease;
+  }
+  .aero-input:focus {
+    outline: none;
+    border-color: rgba(6,182,212,0.5);
+    background-color: rgba(255,255,255,0.1);
+  }
+
+  .animate-stagger-1 { animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+  .animate-stagger-2 { animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both; }
+  .animate-stagger-3 { animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both; }
+  .animate-stagger-4 { animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both; }
+  .animate-stagger-5 { animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both; }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  .animate-float-delayed {
+    animation: float 6s ease-in-out 3s infinite;
+  }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-15px); }
+  100% { transform: translateY(0px); }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: rgba(255,255,255,0.1);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255,255,255,0.2);
 }

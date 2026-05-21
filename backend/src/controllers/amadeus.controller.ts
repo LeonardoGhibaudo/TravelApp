@@ -72,3 +72,19 @@ export async function snapshotFlight(req: Request, res: Response) {
     return res.status(500).json({ error: "Internal server error" });
   }
 }
+
+export async function getFlightsByTrip(req: Request, res: Response) {
+  try {
+    const { tripId } = req.params;
+    const flights = await amadeusService.getFlightsByTrip(req.user.id, tripId);
+    return res.json(flights);
+  } catch (err: any) {
+       if (err.message === "TRIP_NOT_FOUND") {
+            return res.status(404).json({ error: "Viaggio non trovato" })
+        }
+        if (err.message === "FORBIDDEN") {
+            return res.status(403).json({ error: "Accesso negato" })
+        }
+        return res.status(500).json({ error: err.message })
+  }
+}

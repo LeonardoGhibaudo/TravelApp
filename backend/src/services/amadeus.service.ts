@@ -1,5 +1,8 @@
 import axios from "axios"
 
+import { checkTripAccess } from "./tripAccess.service";
+import prisma from "../lib/prisma";
+
 const AMADEUS_CLIENT_ID = process.env.AMADEUS_API_KEY!;
 const AMADEUS_CLIENT_SECRET = process.env.AMADEUS_API_SECRET!;
 const AMADEUS_BASE_URL = "https://test.api.amadeus.com"
@@ -43,49 +46,38 @@ export type flightData = {
   currency: string;
   duration: string;
 };
-
 export async function searchFlights(params: {
   originLocationCode: string;
   destinationLocationCode: string;
   departureDate: string;
   returnDate?: string;
   adults?: number;
-}
-): Promise<flightData[]> {
-  console.log("getting access token...")
-  const token = await getAccessToken()
-  console.log("token acquired")
-  const query: any = {
+}): Promise<flightData[]> {
+  const token = await getAccessToken();
+
+  // Costruisci i params in modo pulito, senza duplicati
+  // e senza mandare undefined ad Amadeus
+  const queryParams: Record<string, any> = {
     originLocationCode: params.originLocationCode,
     destinationLocationCode: params.destinationLocationCode,
     departureDate: params.departureDate,
-    adults: params.adults || 1,
-    nonStop: false,
-    max: 10
+    adults: params.adults ?? 1,
+    max: 10,
+  };
+
+  // returnDate lo aggiungi SOLO se esiste — mai mandare undefined
+  if (params.returnDate) {
+    queryParams.returnDate = params.returnDate;
   }
 
-  if (params.returnDate) query.returnDate = params.returnDate;
-  console.log("BEFORE CALL")
   const response = await axios.get(
-    AMADEUS_BASE_URL + `/v2/shopping/flight-offers`,
+    `${AMADEUS_BASE_URL}/v2/shopping/flight-offers`,
     {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      params: {
-        originLocationCode: params.originLocationCode,
-        destinationLocationCode: params.destinationLocationCode,
-        departureDate: params.departureDate,
-        returnDate: params.returnDate,
-        adults: params.adults ?? 1,
-        max: 10,
-      },
-      timeout: 5000
+      headers: { Authorization: `Bearer ${token}` },
+      params: queryParams,
+      timeout: 5000,
     }
   );
-
-  console.log("AFTER CALL")
-
 
   return response.data.data.map((offer: any) => {
     const itinerary = offer.itineraries[0];
@@ -104,7 +96,6 @@ export async function searchFlights(params: {
     };
   });
 }
-
 
  export async function flightSnapshot(this: any,  data: {
   offerId: string;
@@ -134,4 +125,18 @@ export async function searchFlights(params: {
         tripId: data.tripId,
       },
     });
+ }
+
+
+ export async function getFlightsByTrip(userId: string, tripId: string) {
+    await checkTripAccess(userId, tripId)
+
+    const flights = await prisma.flight.findMany({
+      where: { tripId },
+      orderBy: { departureTime: "asc" }
+    })
+
+    return flights
+
+  
  }

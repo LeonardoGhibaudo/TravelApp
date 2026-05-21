@@ -6,7 +6,7 @@
   "scripts": {
     "test": "jest",
     "build": "tsc && cpx \"prisma/**/*\" dist/prisma",
-    "dev": "npm run build && node dist/server.js",
+   "dev": "tsx watch --tsconfig tsconfig.json src/server.ts",
     "lint": "eslint .",
     "format": "prettier --write ."
   },
@@ -23,6 +23,7 @@
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "prisma": "^5.14.0",
+    "tsx": "^4.21.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
